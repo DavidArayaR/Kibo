@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar psicólogo — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav">
+      <a href="buscar.html" style="color:var(--text)">Buscar</a>
+      <a href="panel-psicologo.html">Soy psicólogo</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="login.html" id="ingresarBtn" class="btn btn-outline btn-sm">Ingresar</a>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <div class="container">
+    <div class="app-header">
+      <div>
+        <h1>Psicólogos disponibles cerca de ti</h1>
+        <p><span id="locBadge">📍 Ubicación activada · Providencia, Santiago</span> · <span class="avail-dot on"><span class="d"></span></span> <span id="liveCount">— </span> disponibles ahora</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <label style="font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+          Mostrar
+          <select id="showCount" style="width:70px;">
+            <option>1</option><option>3</option><option selected>5</option><option>10</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="info-banner" id="modalidadBanner">
+      <span>🎥</span>
+      <div>La atención es por <strong>videollamada</strong>. Para psicología, la distancia no afecta la calidad ni la disponibilidad de la atención — priorizamos por cercanía solo como referencia de contexto.</div>
+      <button aria-label="Cerrar" onclick="document.getElementById('modalidadBanner').remove()">✕</button>
+    </div>
+
+    <div class="filters-bar">
+      <select id="fSpecialty" class="grow">
+        <option value="">Especialidad: todas</option>
+        <option>Ansiedad y estrés</option>
+        <option>Depresión</option>
+        <option>Duelo y pérdida</option>
+        <option>Relaciones de pareja</option>
+      </select>
+      <select id="fGender">
+        <option value="">Género: todos</option>
+        <option>Femenino</option>
+        <option>Masculino</option>
+        <option>No binario</option>
+      </select>
+      <select id="fLang">
+        <option value="">Idioma: todos</option>
+        <option>Español</option>
+        <option>Inglés</option>
+        <option>Portugués</option>
+      </select>
+      <select id="fPrice">
+        <option value="">Precio: cualquiera</option>
+        <option value="16000">Hasta $16.000</option>
+        <option value="18000">Hasta $18.000</option>
+        <option value="99999">Hasta $20.000+</option>
+      </select>
+    </div>
+
+    <div class="search-layout">
+      <div>
+        <div id="results"></div>
+        <div id="emptyState" class="hidden panel center">
+          <p style="font-size:15px; font-weight:700; margin-bottom:6px;">No hay psicólogos disponibles con estos filtros ahora mismo.</p>
+          <p class="muted" style="font-size:13.5px; margin-bottom:18px;">Únete a la cola de espera y te avisaremos apenas alguien se libere.</p>
+          <button class="btn btn-primary" id="joinQueueBtn">Unirme a la cola de espera</button>
+          <div id="queueState" class="hidden alert alert-success" style="margin-top:16px;">✅ Estás en la cola. Posición estimada: #2 · tiempo estimado: ~6 min.</div>
+        </div>
+      </div>
+
+      <div class="map-panel">
+        <svg viewBox="0 0 420 560" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+          <path d="M50 0 C 110 150, 20 260, 100 420 S 190 560 190 560" stroke="rgba(255,255,255,.12)" stroke-width="2" fill="none"/>
+          <path d="M370 0 C 300 130, 390 250, 290 400 S 220 560 220 560" stroke="rgba(255,255,255,.12)" stroke-width="2" fill="none"/>
+          <path d="M0 220 C 130 195, 280 265, 420 230" stroke="rgba(255,255,255,.09)" stroke-width="2" fill="none"/>
+          <circle cx="210" cy="290" r="70" fill="none" stroke="rgba(74,222,128,.18)" stroke-width="1"/>
+          <circle cx="210" cy="290" r="140" fill="none" stroke="rgba(74,222,128,.1)" stroke-width="1"/>
+        </svg>
+        <div class="phone-you" style="left:50%; top:52%;"></div>
+        <div id="mapPins"></div>
+        <div style="position:absolute; left:12px; bottom:12px; right:12px; background:rgba(4,20,29,.75); border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:11.5px; color:var(--text-muted); backdrop-filter: blur(6px);">
+          Los psicólogos a más de 5 km no muestran su ubicación exacta en el mapa — aparecen solo en la lista.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const MAP_DISTANCE_LIMIT_KM = 5; // RF-14, configurable
+
+  function currentFilters(){
+    return {
+      specialty: document.getElementById('fSpecialty').value,
+      gender: document.getElementById('fGender').value,
+      lang: document.getElementById('fLang').value,
+      price: document.getElementById('fPrice').value,
+      count: parseInt(document.getElementById('showCount').value, 10),
+    };
+  }
+
+  function matches(p, f){
+    if(f.specialty && p.specialty !== f.specialty) return false;
+    if(f.gender && p.gender !== f.gender) return false;
+    if(f.lang && !p.languages.includes(f.lang)) return false;
+    if(f.price && p.price > parseInt(f.price,10)) return false;
+    return true;
+  }
+
+  function render(){
+    const f = currentFilters();
+    const all = [...PSYCHOLOGISTS].sort((a,b) => a.distanceKm - b.distanceKm); // RF-12 proximidad
+    const filtered = all.filter(p => matches(p, f));
+    const available = filtered.filter(p => p.available);
+    const shown = filtered.slice(0, f.count); // RF-13
+
+    document.getElementById('liveCount').textContent = available.length + ' psicólogos';
+
+    const results = document.getElementById('results');
+    const empty = document.getElementById('emptyState');
+
+    if(available.length === 0){
+      results.innerHTML = '';
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      results.innerHTML = shown.map(p => {
+        const farAway = p.distanceKm > MAP_DISTANCE_LIMIT_KM;
+        const availTag = p.available
+          ? `<span class="avail-dot on"><span class="d"></span> disponible ahora</span>`
+          : `<span class="avail-dot busy"><span class="d"></span> ocupado/a</span>`;
+        return `
+        <div class="psy-card">
+          ${avatarHTML(p)}
+          <div class="body">
+            <div class="top-row">
+              <div>
+                <div class="name">${p.name} ${p.verified ? '<span title="Credencial verificada" style="color:var(--accent)">✔</span>' : ''}</div>
+                <div class="spec">${p.specialty}</div>
+              </div>
+              <div class="price">${money(p.price)}<div style="font-weight:500; font-size:11px; color:var(--text-faint); text-align:right;">por sesión</div></div>
+            </div>
+            <div class="meta-row">
+              <span>${availTag}</span>
+              <span>📍 ${farAway ? 'a más de '+MAP_DISTANCE_LIMIT_KM+' km' : p.distanceKm + ' km'}</span>
+              <span class="stars">${starsHTML(p.rating)}</span> <span class="faint">${p.rating} (${p.reviews})</span>
+            </div>
+            <div class="actions">
+              <a href="perfil-psicologo.html?id=${p.id}" class="btn btn-outline btn-sm">Ver perfil</a>
+              <a href="${p.available ? 'conectando.html?id='+p.id : '#'}" class="btn btn-primary btn-sm" ${p.available ? '' : 'style="opacity:.5; pointer-events:none;"'}>Solicitar ahora</a>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Map pins — only for available psychologists within distance limit (RF-14)
+    const pins = shown.filter(p => p.available && p.distanceKm <= MAP_DISTANCE_LIMIT_KM);
+    const positions = [[30,24],[68,20],[22,66],[74,58],[46,14],[60,78]];
+    document.getElementById('mapPins').innerHTML = pins.map((p,i) => {
+      const [l,t] = positions[i % positions.length];
+      return `<div class="phone-pin" title="${p.name}" style="left:${l}%; top:${t}%; background:#47708f; box-shadow:0 0 0 5px rgba(71,112,143,.2);"></div>`;
+    }).join('');
+  }
+
+  ['fSpecialty','fGender','fLang','fPrice','showCount'].forEach(id => {
+    document.getElementById(id).addEventListener('change', render);
+  });
+
+  document.getElementById('joinQueueBtn').addEventListener('click', function(){
+    document.getElementById('queueState').classList.remove('hidden');
+    this.disabled = true;
+  });
+
+  render();
+
+  // Simulate real-time availability updates (RF-07 / RF-08) without reload
+  setInterval(() => {
+    const idx = Math.floor(Math.random() * PSYCHOLOGISTS.length);
+    PSYCHOLOGISTS[idx].available = Math.random() > 0.35;
+    render();
+  }, 6000);
+</script>
+</body>
+</html>

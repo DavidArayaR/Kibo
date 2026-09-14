@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel del psicólogo — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav"><span style="color:var(--text)">Panel psicólogo</span></nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="login.html" class="btn btn-outline btn-sm">Cerrar sesión</a>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <div class="container">
+    <div class="app-header">
+      <div>
+        <h1>Hola, <span id="psyName">Dra. M. Herrera</span></h1>
+        <p>Gestiona tu disponibilidad y tus sesiones.</p>
+      </div>
+      <div class="status-toggle" id="statusToggle">
+        <button data-state="disponible"><span class="sdot"></span> Disponible</button>
+        <button data-state="ocupado"><span class="sdot"></span> Ocupado</button>
+        <button data-state="desconectado"><span class="sdot"></span> Desconectado</button>
+      </div>
+    </div>
+
+    <div id="incomingRequest" class="hidden panel" style="border-color: var(--accent); background: var(--accent-soft);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div style="display:flex; gap:14px; align-items:center;">
+          <div class="avatar-dot" style="background:linear-gradient(150deg,#b3b8ea,#a8d0e8)">JP</div>
+          <div>
+            <strong>Nueva solicitud de sesión</strong>
+            <div class="muted" style="font-size:13px;">Paciente J.P. · $18.000 · responde en <span id="reqTimer">20</span>s</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-outline btn-sm" id="rejectReq">Rechazar</button>
+          <button class="btn btn-primary btn-sm" id="acceptReq">Aceptar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num" id="statSessions">410</div><div class="lbl">Sesiones completadas</div></div>
+      <div class="stat-card"><div class="num">4.9 ★</div><div class="lbl">Calificación promedio</div></div>
+      <div class="stat-card"><div class="num" id="statEarnings">$126.000</div><div class="lbl">Ingresos esta semana</div></div>
+      <div class="stat-card"><div class="num">85%</div><div class="lbl">Tu comisión neta</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 style="margin:0;">Próxima liquidación</h2><span class="tag tag-green">Ciclo semanal</span></div>
+      <p class="muted" style="font-size:13.5px; margin-bottom:14px;">Se transfiere automáticamente cada lunes a tu cuenta registrada, descontando la comisión de la plataforma.</p>
+      <div style="display:flex; justify-content:space-between; font-size:14px;">
+        <span>Monto estimado a liquidar</span>
+        <strong class="accent" id="settlementAmount">$107.100</strong>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Historial de sesiones reciente</h2>
+      <table>
+        <thead><tr><th>Fecha</th><th>Paciente</th><th>Duración</th><th>Monto</th><th>Estado</th></tr></thead>
+        <tbody id="sessionHistory"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const s = loadState();
+  if(s.session && s.session.name) document.getElementById('psyName').textContent = s.session.name;
+  document.getElementById('statSessions').textContent = s.psySessionCount || 410;
+
+  // RF-07: estado de disponibilidad
+  const statusButtons = document.querySelectorAll('#statusToggle button');
+  function setStatus(state){
+    statusButtons.forEach(b => b.classList.toggle('active', b.dataset.state === state));
+    updateState({ psyStatus: state });
+  }
+  setStatus(s.psyStatus || 'disponible');
+  statusButtons.forEach(b => b.addEventListener('click', () => setStatus(b.dataset.state)));
+
+  // Simular llegada de una solicitud entrante (RF-17)
+  let reqInterval;
+  function showIncoming(){
+    if((loadState().psyStatus) !== 'disponible') return;
+    document.getElementById('incomingRequest').classList.remove('hidden');
+    let t = 20;
+    document.getElementById('reqTimer').textContent = t;
+    reqInterval = setInterval(() => {
+      t--;
+      document.getElementById('reqTimer').textContent = t;
+      if(t <= 0){ clearInterval(reqInterval); hideIncoming(); }
+    }, 1000);
+  }
+  function hideIncoming(){
+    document.getElementById('incomingRequest').classList.add('hidden');
+  }
+  setTimeout(showIncoming, 3000);
+
+  document.getElementById('acceptReq').addEventListener('click', () => {
+    clearInterval(reqInterval);
+    hideIncoming();
+    alert('Sesión aceptada. Se notificó al paciente para iniciar el pago y conectar la videollamada.');
+  });
+  document.getElementById('rejectReq').addEventListener('click', () => {
+    clearInterval(reqInterval);
+    hideIncoming();
+  });
+
+  // Historial simulado
+  const history = [
+    { date:'12 sep 2026', patient:'A. M.', dur:'48 min', amount:18000, status:'Completada' },
+    { date:'11 sep 2026', patient:'C. R.', dur:'52 min', amount:18000, status:'Completada' },
+    { date:'10 sep 2026', patient:'J. T.', dur:'—', amount:0, status:'No conectó' },
+    { date:'09 sep 2026', patient:'P. L.', dur:'45 min', amount:15000, status:'Completada' },
+  ];
+  document.getElementById('sessionHistory').innerHTML = history.map(h => `
+    <tr>
+      <td>${h.date}</td><td>${h.patient}</td><td>${h.dur}</td><td>${h.amount ? money(h.amount) : '—'}</td>
+      <td><span class="tag ${h.status==='Completada' ? 'tag-green' : 'tag-gray'}">${h.status}</span></td>
+    </tr>`).join('');
+</script>
+</body>
+</html>

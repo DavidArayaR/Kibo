@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valorar sesión — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="form-shell">
+  <div class="card auth-card" id="rateCard">
+    <div class="center">
+      <div id="pAvatar" style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#24404f;"></div>
+      <h1>¿Cómo estuvo tu sesión con <span id="pName"></span>?</h1>
+      <p id="durationText"></p>
+      <div class="rating-stars" id="stars">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Cuéntanos más (opcional)</label>
+      <textarea rows="4" placeholder="¿Qué te gustó? ¿Qué podría mejorar?"></textarea>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" id="submitBtn" disabled>Enviar valoración</button>
+    <button class="btn btn-ghost btn-block" onclick="finish()">Omitir por ahora</button>
+  </div>
+
+  <div class="card auth-card hidden center" id="thanksCard">
+    <div style="font-size:40px;">🙌</div>
+    <h1 style="margin:14px 0 6px;">¡Gracias por tu valoración!</h1>
+    <p class="muted" style="margin-bottom:22px;">Ya llevas <strong id="sessionCount"></strong> sesiones en Kibo.</p>
+    <a href="buscar.html" class="btn btn-primary btn-block btn-lg">Volver a la búsqueda</a>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const p = getPsychologist(params.get('id')) || PSYCHOLOGISTS[0];
+  document.getElementById('pAvatar').style.background = p.gradient;
+  document.getElementById('pAvatar').textContent = p.initials;
+  document.getElementById('pName').textContent = p.name;
+  const dur = parseInt(params.get('dur') || '0', 10);
+  document.getElementById('durationText').innerHTML = `<span class="muted" style="font-size:13px;">Duración: ${Math.max(1, Math.round(dur/60))} min</span>`;
+
+  let rating = 0;
+  const starEls = document.querySelectorAll('#stars span');
+  starEls.forEach(el => {
+    el.addEventListener('click', () => {
+      rating = parseInt(el.dataset.v, 10);
+      starEls.forEach(s => s.classList.toggle('filled', parseInt(s.dataset.v,10) <= rating));
+      document.getElementById('submitBtn').disabled = false;
+    });
+  });
+
+  document.getElementById('submitBtn').addEventListener('click', finish);
+
+  function finish(){
+    document.getElementById('rateCard').classList.add('hidden');
+    document.getElementById('thanksCard').classList.remove('hidden');
+    document.getElementById('sessionCount').textContent = loadState().patientSessionCount || 1;
+  }
+</script>
+</body>
+</html>

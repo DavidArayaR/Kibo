@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil del psicólogo — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav"><a href="buscar.html">Buscar</a></nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="login.html" id="ingresarBtn" class="btn btn-outline btn-sm">Ingresar</a>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <div class="container" style="max-width:840px;">
+    <a href="buscar.html" class="muted" style="font-size:13.5px;">← Volver a la búsqueda</a>
+
+    <div class="panel" style="margin-top:16px; display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap;">
+      <div id="pAvatar" style="width:84px; height:84px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:24px; color:#24404f; flex-shrink:0;"></div>
+      <div style="flex:1; min-width:220px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h1 id="pName" style="font-size:22px; font-weight:800;"></h1>
+            <p id="pSpecialty" class="muted" style="font-size:14px; margin-top:4px;"></p>
+          </div>
+          <div id="pAvail"></div>
+        </div>
+        <div style="display:flex; gap:18px; margin-top:14px; flex-wrap:wrap; font-size:13px;" class="muted">
+          <span class="stars" id="pStars"></span>
+          <span id="pRating"></span>
+          <span id="pSessions"></span>
+          <span id="pDistance">📍</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Sobre mí</h2>
+      <p id="pBio" class="muted" style="font-size:14.5px; line-height:1.7;"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Formación</h2>
+      <p id="pEducation" class="muted" style="font-size:14.5px;"></p>
+      <p style="margin-top:10px; font-size:13px; color:var(--accent);">✔ Credencial profesional validada por Kibo</p>
+    </div>
+
+    <div class="panel">
+      <h2>Idiomas y modalidad</h2>
+      <p id="pLangs" class="muted" style="font-size:14.5px;"></p>
+      <div class="info-banner" style="margin-top:14px; margin-bottom:0;">
+        <span>🎥</span>
+        <div>Atención por videollamada cifrada. La distancia no afecta la calidad de la sesión.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 style="margin:0;">Reseñas</h2></div>
+      <div id="reviews"></div>
+    </div>
+
+    <div class="panel" style="position:sticky; bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; box-shadow:var(--shadow-lg);">
+      <div>
+        <div style="font-size:13px; color:var(--text-muted);">Valor por sesión</div>
+        <div id="pPrice" style="font-size:26px; font-weight:800; color:var(--accent);"></div>
+      </div>
+      <a id="requestBtn" href="#" class="btn btn-primary btn-lg">Solicitar sesión ahora</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id') || 1;
+  const p = getPsychologist(id) || PSYCHOLOGISTS[0];
+
+  document.getElementById('pAvatar').style.background = p.gradient;
+  document.getElementById('pAvatar').textContent = p.initials;
+  document.getElementById('pName').textContent = p.name;
+  document.getElementById('pSpecialty').textContent = p.specialty;
+  document.getElementById('pAvail').innerHTML = p.available
+    ? '<span class="tag tag-green">● Disponible ahora</span>'
+    : '<span class="tag tag-amber">● Ocupado/a</span>';
+  document.getElementById('pStars').textContent = starsHTML(p.rating);
+  document.getElementById('pRating').textContent = p.rating + ' de 5';
+  document.getElementById('pSessions').textContent = p.sessions + ' sesiones completadas';
+  document.getElementById('pDistance').textContent = '📍 ' + p.distanceKm + ' km de ti';
+  document.getElementById('pBio').textContent = p.bio;
+  document.getElementById('pEducation').textContent = p.education;
+  document.getElementById('pLangs').textContent = p.languages.join(' · ');
+  document.getElementById('pPrice').textContent = money(p.price);
+
+  const btn = document.getElementById('requestBtn');
+  if(p.available){
+    btn.href = 'conectando.html?id=' + p.id;
+  } else {
+    btn.textContent = 'No disponible ahora';
+    btn.classList.add('btn-outline');
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '.6';
+  }
+
+  const sampleReviews = [
+    { name:'Paciente anónimo', rating:5, text:'Me sentí escuchada desde el primer minuto. Agradezco la rapidez para conectar.' },
+    { name:'Paciente anónimo', rating:5, text:'Muy profesional y cercana. Repetiré sesión con ella.' },
+    { name:'Paciente anónimo', rating:4, text:'Buena experiencia general, la videollamada tuvo un pequeño corte pero se resolvió rápido.' },
+  ];
+  document.getElementById('reviews').innerHTML = sampleReviews.map(r => `
+    <div style="padding:14px 0; border-bottom:1px solid var(--border-soft);">
+      <div style="display:flex; justify-content:space-between;">
+        <strong style="font-size:13.5px;">${r.name}</strong>
+        <span class="stars">${starsHTML(r.rating)}</span>
+      </div>
+      <p class="muted" style="font-size:13.5px; margin-top:6px;">${r.text}</p>
+    </div>`).join('');
+</script>
+</body>
+</html>

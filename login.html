@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingresar — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav">
+      <a href="index.html#como-funciona">Cómo funciona</a>
+      <a href="index.html#nosotros">Nosotros</a>
+      <a href="index.html#mision">Misión</a>
+      <a href="buscar.html">Psicólogos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="registro.html" class="btn btn-outline btn-sm">Crear cuenta</a>
+    </div>
+  </div>
+</header>
+
+<div class="form-shell">
+  <div class="card auth-card">
+    <h1>Bienvenido de vuelta</h1>
+    <p>Ingresa a tu cuenta de Kibo.</p>
+
+    <div id="pendingAlert" class="hidden alert alert-warn">🕒 Tu cuenta de psicólogo está pendiente de validación manual. Te avisaremos por correo cuando esté activa.</div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="email" required placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="password" required placeholder="Tu contraseña">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Ingresar</button>
+    </form>
+
+    <div class="divider">o continúa con</div>
+    <button type="button" class="btn btn-outline btn-block">Continuar con Google</button>
+
+    <div class="divider">acceso rápido de demo</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" class="btn btn-outline btn-sm" data-demo="paciente" style="flex:1;">👤 Paciente</button>
+      <button type="button" class="btn btn-outline btn-sm" data-demo="psicologo" style="flex:1;">🩺 Psicólogo</button>
+      <button type="button" class="btn btn-outline btn-sm" data-demo="admin" style="flex:1;">🛠️ Admin</button>
+    </div>
+
+    <div class="foot-link">¿Aún no tienes cuenta? <a href="registro.html">Regístrate</a></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  if(params.get('pending')) document.getElementById('pendingAlert').classList.remove('hidden');
+
+  function enter(role){
+    const names = { paciente:'María José Pérez', psicologo:'Dra. M. Herrera', admin:'Equipo Kibo' };
+    updateState({ session: { role, name: names[role], email: document.getElementById('email').value || 'demo@kibo.cl' } });
+    const dest = role === 'psicologo' ? 'panel-psicologo.html' : role === 'admin' ? 'panel-admin.html' : 'buscar.html';
+    location.href = dest;
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('email').value.toLowerCase();
+    if(email.includes('admin')) enter('admin');
+    else if(email.includes('psi') || email.includes('doc')) enter('psicologo');
+    else enter('paciente');
+  });
+
+  document.querySelectorAll('[data-demo]').forEach(btn => {
+    btn.addEventListener('click', () => enter(btn.dataset.demo));
+  });
+</script>
+</body>
+</html>
