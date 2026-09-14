@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Videollamada — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="call-shell">
+  <div class="call-top-banner">🎥 Sesión cifrada · Kibo no reemplaza un servicio de emergencia — si hay riesgo vital, contacta a Salud Responde 600 360 7777 o *4141</div>
+
+  <div class="call-stage">
+    <div class="call-timer" id="timer">00:00</div>
+
+    <div class="call-tile">
+      <div class="avatar-dot" id="youAvatar" style="background:linear-gradient(150deg,#a8d0e8,#b3b8ea);">TÚ</div>
+      <div class="label">Tú</div>
+    </div>
+    <div class="call-tile">
+      <div class="avatar-dot" id="psyAvatar"></div>
+      <div class="label" id="psyLabel"></div>
+
+      <div class="moderation-overlay hidden" id="modOverlay">
+        <div class="icon">⚠️</div>
+        <h3>No se permite compartir datos de contacto personal dentro de la sesión</h3>
+        <p>Detectamos un posible intento de intercambiar datos de contacto (teléfono, WhatsApp, redes sociales). La videollamada se pausó y el evento fue registrado como incidente.</p>
+        <button class="btn btn-primary" id="resumeBtn">Entendido, reanudar sesión</button>
+      </div>
+    </div>
+
+    <div class="chat-panel hidden" id="chatPanel">
+      <div class="chat-head">Chat de la sesión <button onclick="document.getElementById('chatPanel').classList.add('hidden')" style="background:none;border:none;color:var(--text-faint);cursor:pointer;">✕</button></div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="chat-bubble">Hola, ¿cómo te sientes hoy?</div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Escribe un mensaje…">
+        <button class="btn btn-primary btn-sm" id="chatSend">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="call-controls">
+    <button class="call-btn" id="micBtn" title="Silenciar">🎤</button>
+    <button class="call-btn" id="camBtn" title="Cámara">📷</button>
+    <button class="call-btn" id="chatBtn" title="Chat">💬</button>
+    <button class="call-btn" id="demoBtn" title="Demo: simular intento de compartir contacto" style="font-size:12px; width:auto; padding:0 16px;">⚠️ Simular intento de contacto</button>
+    <button class="call-btn end" id="endBtn" title="Terminar llamada">📞</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id') || 1;
+  const p = getPsychologist(id) || PSYCHOLOGISTS[0];
+  document.getElementById('psyAvatar').style.background = p.gradient;
+  document.getElementById('psyAvatar').textContent = p.initials;
+  document.getElementById('psyLabel').textContent = p.name;
+
+  // Timer
+  let seconds = 0;
+  setInterval(() => {
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+  }, 1000);
+
+  // Controls
+  document.getElementById('micBtn').addEventListener('click', function(){ this.classList.toggle('active-off'); this.textContent = this.classList.contains('active-off') ? '🔇' : '🎤'; });
+  document.getElementById('camBtn').addEventListener('click', function(){ this.classList.toggle('active-off'); this.textContent = this.classList.contains('active-off') ? '🚫' : '📷'; });
+  document.getElementById('chatBtn').addEventListener('click', () => document.getElementById('chatPanel').classList.toggle('hidden'));
+
+  document.getElementById('chatSend').addEventListener('click', sendMsg);
+  document.getElementById('chatInput').addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg(); });
+  function sendMsg(){
+    const input = document.getElementById('chatInput');
+    if(!input.value.trim()) return;
+    const div = document.createElement('div');
+    div.className = 'chat-bubble me';
+    div.textContent = input.value;
+    document.getElementById('chatMsgs').appendChild(div);
+    document.getElementById('chatMsgs').scrollTop = 9999;
+    input.value = '';
+  }
+
+  // RF-21: demo de detección de intercambio de datos de contacto
+  document.getElementById('demoBtn').addEventListener('click', function(){
+    document.getElementById('modOverlay').classList.remove('hidden');
+    addIncident({
+      type: 'Intento de intercambio de datos de contacto',
+      session: 'Sesión con ' + p.name,
+      detail: 'Transcripción detectó una frase compatible con el patrón de intercambio de contacto (simulado en demo).',
+      severity: 'media',
+    });
+  });
+  document.getElementById('resumeBtn').addEventListener('click', () => document.getElementById('modOverlay').classList.add('hidden'));
+
+  // Terminar llamada -> registrar sesión (RF-20) y contador (RF-05/06) -> valoración
+  document.getElementById('endBtn').addEventListener('click', function(){
+    const s = loadState();
+    updateState({
+      patientSessionCount: (s.patientSessionCount||0) + 1,
+      psySessionCount: (s.psySessionCount||0) + 1,
+      activePsychologist: null,
+    });
+    location.href = 'valoracion.html?id=' + p.id + '&dur=' + seconds;
+  });
+</script>
+</body>
+</html>

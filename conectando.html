@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conectando — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="session-shell">
+
+  <!-- Paso 1: solicitud -->
+  <div id="stepRequest">
+    <div id="pAvatarBig" style="width:72px;height:72px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#24404f;"></div>
+    <h1 style="font-size:22px; font-weight:800; margin-bottom:8px;">Solicitando conexión con <span id="pName"></span>…</h1>
+    <p class="muted" style="font-size:14px;">Le avisamos al profesional. Esto suele tardar unos segundos.</p>
+    <div class="spinner" style="margin-top:30px;"></div>
+    <div class="panel" style="margin-top:30px; text-align:left;">
+      <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;"><span class="muted">Sesión con</span><strong id="pName2"></strong></div>
+      <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;"><span class="muted">Duración estimada</span><strong>50 min</strong></div>
+      <div style="display:flex; justify-content:space-between; font-size:14px;"><span class="muted">Monto a retener</span><strong id="pPrice" class="accent"></strong></div>
+    </div>
+    <p class="faint" style="font-size:12px; margin-top:14px;">Se retendrá el monto hasta confirmar la sesión. Si el profesional rechaza o no responde a tiempo, se libera automáticamente.</p>
+  </div>
+
+  <!-- Paso 2: pago -->
+  <div id="stepPay" class="hidden">
+    <div class="alert alert-success" style="text-align:left;">✅ <span id="pName3"></span> aceptó tu solicitud. Confirma el pago para conectarte.</div>
+    <div class="card" style="padding:26px; text-align:left; margin-top:10px;">
+      <h2 style="font-size:17px; margin-bottom:18px;">Método de pago</h2>
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button type="button" class="btn btn-outline btn-sm pay-tab active" data-pay="card">💳 Tarjeta</button>
+        <button type="button" class="btn btn-outline btn-sm pay-tab" data-pay="webpay">🇨🇱 WebPay</button>
+        <button type="button" class="btn btn-outline btn-sm pay-tab" data-pay="mercadopago">Ⓜ️ MercadoPago</button>
+      </div>
+      <div id="payCard">
+        <div class="field"><label>Número de tarjeta</label><input type="text" placeholder="4051 8856 0044 6763"></div>
+        <div class="field-row">
+          <div class="field"><label>Vencimiento</label><input type="text" placeholder="08/29"></div>
+          <div class="field"><label>CVV</label><input type="text" placeholder="123"></div>
+        </div>
+      </div>
+      <div id="payRedirect" class="hidden muted" style="font-size:13.5px; padding:14px 0;">Serás redirigido a la pasarela de pago para completar la transacción de forma segura.</div>
+      <div style="display:flex; justify-content:space-between; margin:18px 0; font-size:15px;"><span>Total a pagar</span><strong id="pPrice2" class="accent"></strong></div>
+      <button class="btn btn-primary btn-block btn-lg" id="payBtn">Pagar y conectar</button>
+    </div>
+  </div>
+
+  <!-- Paso 3: conectando -->
+  <div id="stepConnect" class="hidden">
+    <div class="spinner"></div>
+    <h1 style="font-size:20px; font-weight:800; margin-bottom:8px;">Pago confirmado. Conectando con tu psicólogo…</h1>
+    <p class="muted" style="font-size:13.5px;">Meta de conexión: menos de 3 minutos.</p>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="faint" style="font-size:12px;" id="progressLabel">0 s</p>
+  </div>
+
+  <!-- Paso 4a: éxito -->
+  <div id="stepSuccess" class="hidden">
+    <div style="font-size:40px;">✅</div>
+    <h1 style="font-size:20px; font-weight:800; margin:12px 0 6px;">¡Conectado!</h1>
+    <p class="muted" style="font-size:14px; margin-bottom:24px;">Entrando a la sala de videollamada…</p>
+  </div>
+
+  <!-- Paso 4b: fallo -->
+  <div id="stepFail" class="hidden">
+    <div style="font-size:40px;">⏱️</div>
+    <h1 style="font-size:20px; font-weight:800; margin:12px 0 6px;">El profesional no respondió a tiempo</h1>
+    <p class="muted" style="font-size:14px; margin-bottom:24px;">Tu pago fue reembolsado automáticamente. Puedes intentar con otro psicólogo disponible.</p>
+    <a href="buscar.html" class="btn btn-primary btn-lg">Buscar otro psicólogo</a>
+  </div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get('id') || 1;
+  const p = getPsychologist(id) || PSYCHOLOGISTS[0];
+  ['pName','pName2','pName3'].forEach(k => document.getElementById(k).textContent = p.name);
+  ['pPrice','pPrice2'].forEach(k => document.getElementById(k).textContent = money(p.price));
+  const av = document.getElementById('pAvatarBig');
+  av.style.background = p.gradient; av.textContent = p.initials;
+
+  function show(step){
+    ['stepRequest','stepPay','stepConnect','stepSuccess','stepFail'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== step);
+    });
+  }
+
+  // Paso 1 -> Paso 2 (simula aceptación del profesional, RF-17)
+  setTimeout(() => show('stepPay'), 2200);
+
+  // Tabs de método de pago (RF-24)
+  document.querySelectorAll('.pay-tab').forEach(btn => {
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.pay-tab').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const isCard = this.dataset.pay === 'card';
+      document.getElementById('payCard').classList.toggle('hidden', !isCard);
+      document.getElementById('payRedirect').classList.toggle('hidden', isCard);
+    });
+  });
+
+  // Paso 2 -> Paso 3 (cobro, RF-23)
+  document.getElementById('payBtn').addEventListener('click', function(){
+    show('stepConnect');
+    updateState({ activePsychologist: p.id });
+    const start = Date.now();
+    const maxMs = 4200; // simula conexión < 180s SLA
+    const interval = setInterval(() => {
+      const pct = Math.min(100, ((Date.now() - start) / maxMs) * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent = Math.round((Date.now()-start)/1000) + ' s';
+      if(pct >= 100){
+        clearInterval(interval);
+        show('stepSuccess');
+        setTimeout(() => location.href = 'videollamada.html?id=' + p.id, 900);
+      }
+    }, 100);
+  });
+</script>
+</body>
+</html>

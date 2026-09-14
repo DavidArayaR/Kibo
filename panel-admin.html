@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de administración — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav"><span style="color:var(--text)">Panel administrativo</span></nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="login.html" class="btn btn-outline btn-sm">Cerrar sesión</a>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <div class="container">
+    <div class="app-header">
+      <div>
+        <h1>Panel de administración</h1>
+        <p>Validación de credenciales, incidentes y métricas de la plataforma.</p>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num">1.284</div><div class="lbl">Sesiones totales (30 días)</div></div>
+      <div class="stat-card"><div class="num">2m 41s</div><div class="lbl">Tiempo promedio de conexión</div></div>
+      <div class="stat-card"><div class="num">$19,2M</div><div class="lbl">Ingresos del período</div></div>
+      <div class="stat-card"><div class="num">4.8 ★</div><div class="lbl">Satisfacción promedio</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2 style="margin:0;">Validación de credenciales de psicólogos</h2>
+        <span class="tag tag-amber" id="pendingCount">0 pendientes</span>
+      </div>
+      <table>
+        <thead><tr><th>Profesional</th><th>N° registro</th><th>Especialidad</th><th>Postulación</th><th>Documentos</th><th>Acción</th></tr></thead>
+        <tbody id="pendingTable"></tbody>
+      </table>
+      <p class="muted" style="font-size:12.5px; margin-top:12px;" id="noPending"></p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2 style="margin:0;">Gestión de incidentes</h2>
+        <span class="tag tag-red" id="incidentCount">0 abiertos</span>
+      </div>
+      <table>
+        <thead><tr><th>ID</th><th>Tipo</th><th>Detalle</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="incidentTable"></tbody>
+      </table>
+      <p class="muted" style="font-size:12.5px; margin-top:12px;" id="noIncidents"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Psicólogos activos</h2>
+      <table>
+        <thead><tr><th>Profesional</th><th>Especialidad</th><th>Sesiones</th><th>Calificación</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="activeTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  function renderPending(){
+    const s = loadState();
+    const pending = s.pendingPsychologists || [];
+    document.getElementById('pendingCount').textContent = pending.length + ' pendientes';
+    document.getElementById('noPending').textContent = pending.length === 0 ? 'No hay postulaciones pendientes.' : '';
+    document.getElementById('pendingTable').innerHTML = pending.map(p => `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.registro}</td>
+        <td>${p.specialty}</td>
+        <td>${p.submitted}</td>
+        <td><a href="#" onclick="alert('Prototipo: aquí se abrirían los documentos de respaldo (título, certificado de registro).'); return false;">Ver documentos</a></td>
+        <td style="display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="decide('${p.id}', 'aprobar')">Aprobar</button>
+          <button class="btn btn-outline btn-sm" onclick="decide('${p.id}', 'rechazar')">Rechazar</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function decide(id, action){
+    const s = loadState();
+    const pending = (s.pendingPsychologists || []).filter(p => p.id !== id);
+    updateState({ pendingPsychologists: pending });
+    renderPending();
+  }
+
+  function renderIncidents(){
+    const s = loadState();
+    const incidents = s.incidents || [];
+    const open = incidents.filter(i => i.status === 'abierto');
+    document.getElementById('incidentCount').textContent = open.length + ' abiertos';
+    document.getElementById('noIncidents').textContent = incidents.length === 0
+      ? 'No hay incidentes registrados. (Se registran automáticamente desde la moderación en tiempo real de la videollamada, o pueden reportarse manualmente.)'
+      : '';
+    document.getElementById('incidentTable').innerHTML = incidents.map(i => `
+      <tr>
+        <td class="mono-label" style="font-size:11px;">${i.id}</td>
+        <td>${i.type}</td>
+        <td class="muted" style="max-width:260px;">${i.detail || i.session || ''}</td>
+        <td>${new Date(i.date).toLocaleString('es-CL')}</td>
+        <td><span class="tag ${i.status==='abierto' ? 'tag-red' : 'tag-green'}">${i.status}</span></td>
+        <td>${i.status==='abierto' ? `<button class="btn btn-outline btn-sm" onclick="resolveIncident('${i.id}')">Marcar resuelto</button>` : ''}</td>
+      </tr>`).join('');
+  }
+
+  function resolveIncident(id){
+    const s = loadState();
+    const incidents = (s.incidents || []).map(i => i.id === id ? Object.assign({}, i, { status:'resuelto' }) : i);
+    updateState({ incidents });
+    renderIncidents();
+  }
+
+  document.getElementById('activeTable').innerHTML = PSYCHOLOGISTS.map(p => `
+    <tr>
+      <td style="display:flex; align-items:center; gap:10px;">${avatarHTML(p)} <strong>${p.name}</strong></td>
+      <td>${p.specialty}</td>
+      <td>${p.sessions}</td>
+      <td>${p.rating} ★</td>
+      <td>${p.available ? '<span class="tag tag-green">Disponible</span>' : '<span class="tag tag-gray">Desconectado/Ocupado</span>'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="if(confirm('¿Suspender la cuenta de ${p.name}?')) alert('Cuenta suspendida (simulado).')">Suspender</button></td>
+    </tr>`).join('');
+
+  renderPending();
+  renderIncidents();
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crear cuenta — Kibo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><span class="brand-mark">☀️</span> Kibo</a>
+    <nav class="main-nav">
+      <a href="index.html#como-funciona">Cómo funciona</a>
+      <a href="index.html#nosotros">Nosotros</a>
+      <a href="index.html#mision">Misión</a>
+      <a href="buscar.html">Psicólogos</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema">🌙</button>
+      <a href="login.html" class="btn btn-outline btn-sm">Ingresar</a>
+    </div>
+  </div>
+</header>
+
+<div class="form-shell">
+  <div class="card auth-card">
+    <h1>Crea tu cuenta</h1>
+    <p>Regístrate como paciente para buscar apoyo, o como psicólogo para atender en Kibo.</p>
+
+    <div class="tabs">
+      <button type="button" id="tabPaciente" class="active">Soy paciente</button>
+      <button type="button" id="tabPsicologo">Soy psicólogo</button>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- RF-01 Registro de pacientes -->
+    <form id="formPaciente">
+      <div class="field-row">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" required placeholder="María José Pérez">
+        </div>
+        <div class="field">
+          <label>Edad</label>
+          <input type="number" min="18" max="99" required placeholder="27">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>RUT</label>
+          <input type="text" required placeholder="12.345.678-9">
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="tel" required placeholder="+56 9 1234 5678">
+        </div>
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <input type="text" required placeholder="Av. Siempre Viva 123, Providencia">
+      </div>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" required placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" required minlength="8" placeholder="Mínimo 8 caracteres">
+      </div>
+      <div class="field hint" style="margin-top:-8px;">Te enviaremos un código de confirmación por SMS/WhatsApp al número ingresado.</div>
+      <label class="check-row">
+        <input type="checkbox" required>
+        Acepto los Términos de Servicio y el Consentimiento Informado. Entiendo que Kibo es un intermediario tecnológico y no un prestador directo de salud, y que no reemplaza un servicio de urgencia o de crisis.
+      </label>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Crear cuenta de paciente</button>
+    </form>
+
+    <!-- RF-02 Registro de psicólogos -->
+    <form id="formPsicologo" class="hidden">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" required placeholder="Ps. Valentina Rojas">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" required placeholder="tucorreo@ejemplo.com">
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="tel" required placeholder="+56 9 1234 5678">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>N° de registro profesional (SIS/Colegio)</label>
+          <input type="text" required placeholder="SIS-12345">
+        </div>
+        <div class="field">
+          <label>Especialidad</label>
+          <select required>
+            <option value="">Selecciona una especialidad</option>
+            <option>Ansiedad y estrés</option>
+            <option>Depresión</option>
+            <option>Duelo y pérdida</option>
+            <option>Relaciones de pareja</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Documentos de respaldo (título, certificado de registro)</label>
+        <input type="file" multiple>
+        <div class="hint">Formatos PDF/JPG. Tu cuenta quedará <strong>pendiente de validación manual</strong> por nuestro equipo antes de poder recibir pacientes.</div>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" required minlength="8" placeholder="Mínimo 8 caracteres">
+      </div>
+      <label class="check-row">
+        <input type="checkbox" required>
+        Declaro que la información entregada es verídica y acepto los Términos de Servicio para profesionales de Kibo, incluyendo que ejerzo como profesional independiente.
+      </label>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Enviar postulación</button>
+    </form>
+
+    <div class="divider">o continúa con</div>
+    <button type="button" class="btn btn-outline btn-block">Continuar con Google</button>
+
+    <div class="foot-link">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/theme.js"></script>
+<script>
+  const tabPaciente = document.getElementById('tabPaciente');
+  const tabPsicologo = document.getElementById('tabPsicologo');
+  const formPaciente = document.getElementById('formPaciente');
+  const formPsicologo = document.getElementById('formPsicologo');
+  const alertBox = document.getElementById('alertBox');
+
+  function showRole(role){
+    const isPsy = role === 'psicologo';
+    tabPsicologo.classList.toggle('active', isPsy);
+    tabPaciente.classList.toggle('active', !isPsy);
+    formPsicologo.classList.toggle('hidden', !isPsy);
+    formPaciente.classList.toggle('hidden', isPsy);
+  }
+  tabPaciente.addEventListener('click', () => showRole('paciente'));
+  tabPsicologo.addEventListener('click', () => showRole('psicologo'));
+
+  const params = new URLSearchParams(location.search);
+  if(params.get('rol') === 'psicologo') showRole('psicologo');
+
+  formPaciente.addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = this.querySelector('input[type=text]').value || 'Paciente';
+    updateState({ session: { role:'paciente', name, email:'' } });
+    alertBox.innerHTML = `<div class="alert alert-success">✅ Cuenta creada. Redirigiendo a la búsqueda de psicólogos…</div>`;
+    setTimeout(() => location.href = 'buscar.html', 1100);
+  });
+
+  formPsicologo.addEventListener('submit', function(e){
+    e.preventDefault();
+    alertBox.innerHTML = `<div class="alert alert-warn">🕒 Postulación enviada. Tu cuenta quedará <strong>pendiente de validación manual</strong> por el equipo de Kibo (normalmente 24–48 h) antes de poder recibir pacientes.</div>`;
+    setTimeout(() => location.href = 'login.html?rol=psicologo&pending=1', 1600);
+  });
+</script>
+</body>
+</html>
